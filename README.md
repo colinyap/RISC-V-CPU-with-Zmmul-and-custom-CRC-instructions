@@ -52,7 +52,7 @@ This is a deliberately compact multicycle design, not a pipelined processor. It 
 ```text
                      ┌──────────────────────────┐
  Instruction/Data ──►│                          │──► Address
-       Rdata          │       RV32 core          │──► WriteData
+       Rdata         │       RV32 core          │──► WriteData
                      │                          │──► MemWrite / ByteStrobe
                      │  Register file           │
                      │  Immediate generator     │
