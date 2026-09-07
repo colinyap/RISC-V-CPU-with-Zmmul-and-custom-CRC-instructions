@@ -1062,7 +1062,11 @@ endmodule
 module top (
 
   input wire clk,
-  input wire rst_n
+  input wire rst_n,
+  output wire syscall,
+  output wire illegal_instruct,
+  output wire [31:0] debug_PC,
+  output wire [1:0] debug_state
 
 );
 
@@ -1081,23 +1085,30 @@ module top (
  wire [31:0] w_14;
  wire [31:0] w_17;
  wire [1:0] w_20;
- wire [63:0] w_22;
- wire [31:0] w_23;
- wire [1:0] w_24;
- wire [15:0] w_25;
- wire [31:0] w_26;
- wire w_27;
+ wire [63:0] w_24;
+ wire [31:0] w_25;
+ wire [1:0] w_26;
+ wire [15:0] w_27;
  wire [31:0] w_28;
- wire [31:0] w_29;
- wire w_30;
- wire w_31;
+ wire w_29;
+ wire [31:0] w_30;
+ wire [31:0] w_31;
  wire w_32;
  wire w_33;
+ wire w_34;
+ wire w_35;
+
+//Interface Assigns
+assign debug_state [1:0] = w_20;
 
 //Instances of Modules
 rv32i_core blk3708_24 (
          .clk (clk),
          .rst_n (rst_n),
+         .syscall (syscall),
+         .illegal_instruction (illegal_instruct),
+         .debug_pc (debug_PC [31:0]),
+         .debug_state (w_20),
          .Rdata (w_1),
          .ext_ready (w_2),
          .ext_result (w_3),
@@ -1110,42 +1121,41 @@ rv32i_core blk3708_24 (
          .ext_instruction (w_12),
          .ext_funct3 (w_13),
          .ext_rs1_data (w_14),
-         .ext_rs2_data (w_17),
-         .debug_state (w_20)
+         .ext_rs2_data (w_17)
      );
 
 MultiplierWrapper blk4140_28 (
          .funct3 (w_13),
          .rs1 (w_14),
          .rs2 (w_17),
-         .raw_input (w_22),
-         .out (w_23)
+         .raw_input (w_24),
+         .out (w_25)
      );
 
 xicrc_exec blk4146_34 (
          .rs1_data (w_14),
          .rs2_data (w_17),
-         .crc_sel (w_24),
-         .crc_result (w_25)
+         .crc_sel (w_26),
+         .crc_result (w_27)
      );
 
 zeroextend_16to32 blk4147_35 (
-         .in (w_25),
-         .out (w_26)
+         .in (w_27),
+         .out (w_28)
      );
 
 MUX2_32 blk1779_37 (
          .Z (w_3),
-         .A (w_23),
-         .B (w_26),
-         .S (w_27)
+         .A (w_25),
+         .B (w_28),
+         .S (w_29)
      );
 
 MUX2_32 blk1779_50 (
          .Z (w_1),
-         .A (w_28),
-         .B (w_29),
-         .S (w_30)
+         .A (w_30),
+         .B (w_31),
+         .S (w_32)
      );
 
 RISCV_DMEM blk4191_54 (
@@ -1154,13 +1164,13 @@ RISCV_DMEM blk4191_54 (
          .i_Data (w_9),
          .i_Write_Enable (w_10),
          .i_Byte_Enable (w_11),
-         .o_Data (w_29)
+         .o_Data (w_31)
      );
 
 RISCV_iMEM blk4195_67 (
          .i_Clk (clk),
          .i_Address (w_6),
-         .r_Instruction (w_28)
+         .r_Instruction (w_30)
      );
 
 RadixBooth blk2514_72 (
@@ -1169,10 +1179,10 @@ RadixBooth blk2514_72 (
          .en (1'b1),
          .inputA (w_14),
          .inputB (w_17),
-         .result (w_22),
-         .start (w_31),
-         .ready (w_32),
-         .start_posedge (w_33)
+         .result (w_24),
+         .start (w_33),
+         .ready (w_34),
+         .start_posedge (w_35)
      );
 
 ext_secondarycontrol blk4154_73 (
@@ -1181,17 +1191,17 @@ ext_secondarycontrol blk4154_73 (
          .illegal (w_5),
          .instruction (w_12),
          .state (w_20),
-         .crc_sel (w_24),
-         .write_sel (w_27),
-         .mul_start (w_31),
-         .mul_ready (w_32),
-         .start_posedge (w_33)
+         .crc_sel (w_26),
+         .write_sel (w_29),
+         .mul_start (w_33),
+         .mul_ready (w_34),
+         .start_posedge (w_35)
      );
 
 address_decoder blk4199_74 (
          .Address (w_6),
          .state (w_20),
-         .rData_sel (w_30)
+         .rData_sel (w_32)
      );
 
 
