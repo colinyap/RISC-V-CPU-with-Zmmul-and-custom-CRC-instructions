@@ -17,6 +17,12 @@
 //==========================================================================
 `timescale 1ns / 1ps
 
+// Single point of truth for the CPU instance path.
+// ChipInventor renumbers instances on every top-level regen -- if compilation
+// fails with "Unable to bind wire/reg/memory", update this one line to match
+// the RV32_single_optimised instance name in hdl.v.
+`define CPU dut.blk4224_79
+
 module testbench;
 
     localparam [31:0] PASS_LOOP = 32'h004003EC;
@@ -45,6 +51,9 @@ module testbench;
         .debug_pc (debug_pc),
         .Address  (Address)
     );
+
+    wire [31:0] x4  = `CPU.registers[4];
+    wire [31:0] x31 = `CPU.registers[31];
 
     // 100 MHz
     initial clk = 1'b0;
@@ -77,7 +86,7 @@ module testbench;
             if (illegal) begin
                 illegal_count <= illegal_count + 1;
                 $display("[%0t] ILLEGAL at pc=0x%08h instr=0x%08h",
-                         $time, debug_pc, dut.blk4224_79.instruction);
+                         $time, debug_pc, `CPU.instruction);
             end
         end
     end
@@ -100,13 +109,13 @@ module testbench;
                 $display("==================================================");
                 $display("  TIMEOUT after %0d cycles -- PC never parked", cycles);
                 $display("  last PC    = 0x%08h", debug_pc);
-                $display("  last instr = 0x%08h", dut.blk4224_79.instruction);
-                $display("  state      = %0d", dut.blk4224_79.state);
+                $display("  last instr = 0x%08h", `CPU.instruction);
+                $display("  state      = %0d", `CPU.state);
                 $display("  Address    = 0x%08h", Address);
                 $display("  mul_busy   = %b  mul_ready = %b  mul_i = %0d",
-                         dut.blk4224_79.mul_busy,
-                         dut.blk4224_79.mul_ready,
-                         dut.blk4224_79.mul_i);
+                         `CPU.mul_busy,
+                         `CPU.mul_ready,
+                         `CPU.mul_i);
                 $display("==================================================");
                 $finish;
             end
@@ -120,15 +129,15 @@ module testbench;
             repeat (8) @(posedge clk);
             $display("");
             $display("==================================================");
-            if (passed && dut.blk4224_79.registers[4] == 32'h0000_0000)
+            if (passed && `CPU.registers[4] == 32'h0000_0000)
                 $display("  RESULT: PASS   (x4 = 0x%08h)",
-                         dut.blk4224_79.registers[4]);
+                         `CPU.registers[4]);
             else if (passed)
                 $display("  RESULT: PASS loop reached but x4 = 0x%08h (expected 0)",
-                         dut.blk4224_79.registers[4]);
+                         `CPU.registers[4]);
             else
                 $display("  RESULT: FAIL   (x4 = 0x%08h, PC parked at 0x%08h)",
-                         dut.blk4224_79.registers[4], debug_pc);
+                         `CPU.registers[4], debug_pc);
             $display("  cycles run : %0d", cycles);
             $display("  syscalls   : %0d", syscall_count);
             $display("  illegals   : %0d", illegal_count);
@@ -145,7 +154,7 @@ module testbench;
             $display("register file:");
             for (r = 0; r < 32; r = r + 1)
                 $display("  x%0d%s= 0x%08h", r, (r < 10) ? "  " : " ",
-                         dut.blk4224_79.registers[r]);
+                         `CPU.registers[r]);
         end
     endtask
 
