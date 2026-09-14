@@ -305,7 +305,7 @@ module RV32_single_optimised #(
                             result_reg <= load_value;
                             state      <= S_WB;
                         end
-                        OP_STORE: state <= S_WB;
+                        OP_STORE: state <= S_FETCH;
                         OP_REG: begin
                             if (base_rtype) begin
                                 result_reg <= base_alu_result;
@@ -322,7 +322,7 @@ module RV32_single_optimised #(
                         OP_AUIPC: begin result_reg <= old_pc + imm_u; state <= S_WB; end
                         OP_BRANCH: begin
                             if (branch_taken) pc <= old_pc + imm_b;
-                            state <= S_WB;
+                            state <= S_FETCH;
                         end
                         OP_JAL: begin
                             result_reg <= old_pc + 32'd4;
@@ -626,9 +626,9 @@ module RISCV_DMEM_OPTIMISED(
     input [3:0] i_Byte_Enable
 );
 
-    /* 128B RAM
+    /* 256B RAM
     */
-  reg [31:0] r_Contents [0:31];
+  reg [31:0] r_Contents [0:2];
 
     /* Synchronous Write */
     always @(posedge i_Clk) begin
@@ -636,19 +636,19 @@ module RISCV_DMEM_OPTIMISED(
         if (i_Write_Enable) begin
 
             if (i_Byte_Enable[0])
-              r_Contents[i_Address[6:2]][7:0]
+              r_Contents[i_Address[4:2]][7:0]
                     <= i_Data[7:0];
 
             if (i_Byte_Enable[1])
-              r_Contents[i_Address[6:2]][15:8]
+              r_Contents[i_Address[4:2]][15:8]
                     <= i_Data[15:8];
 
             if (i_Byte_Enable[2])
-              r_Contents[i_Address[6:2]][23:16]
+              r_Contents[i_Address[4:2]][23:16]
                     <= i_Data[23:16];
 
             if (i_Byte_Enable[3])
-              r_Contents[i_Address[6:2]][31:24]
+              r_Contents[i_Address[4:2]][31:24]
                     <= i_Data[31:24];
 
         end
@@ -656,7 +656,7 @@ module RISCV_DMEM_OPTIMISED(
 
 
     /* Asynchronous Read */
-  assign o_Data = r_Contents[i_Address[6:2]];
+  assign o_Data = r_Contents[i_Address[4:2]];
 
 endmodule
 
